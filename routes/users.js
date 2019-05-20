@@ -8,13 +8,18 @@ router.get('/',(req,res)=>{
 })
 
 router.post('/',(req,res)=>{
-   user = new User(_.pick(req.body, ['name', 'email', 'password']));
-   
-    let user =  User.findOne({ email: req.body.email })
-    res.send(user);
-    // if (user) return res.status(400).send('User already registered.');
-    //  user.save();
-     res.send(user);
+    console.log('Inside post users');
+  let  user = new User(_.pick(req.body, ['name', 'email', 'password']));
+   console.log(_.pick(req.body, ['name', 'email', 'password']))
+    
+    fuser =  User.findOne({ email: req.body.email })
+    
+    if(!fuser){
+    return res.status(400).send('User already registered.');
+   }else{
+       user.save();
+       return res.send(user);
+   }
 })
 
 module.exports = router;
