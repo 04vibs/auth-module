@@ -4,10 +4,12 @@ const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const {User} = require('../models/user');
+const auth = require('../middleware/auth');
 const _ = require('lodash');
+const admin = require('../middleware/admin');
 
-router.get('/me',  async (req, res) => {
-    const user = await User.findById(req.body._id).select('-password');
+router.get('/me', [auth,admin], async (req, res) => {
+    const user = await User.findById(req.user._id).select('-password');
     res.send(user);
   });
 
@@ -25,8 +27,18 @@ router.post('/',async(req,res)=>{
     user.password = await bcrypt.hash(user.password,salt);
         
     await user.save();
-    return res.send(_.pick(user,['_id','name','email']));
+    const token = user.generateAuthToken();
+    res.header('x-auth-token',token).send(_.pick(user,['_id','name','email']));
 
 });
+function validate(req) {
+    const schema = {
+      name: Joi.string().min(5).max(255).required(),
+      email: Joi.string().min(5).max(255).required().email(),
+      password: Joi.string().min(5).max(255).required()
+    };
+  
+    return Joi.validate(req, schema);
+}
 
 module.exports = router;
